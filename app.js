@@ -16,6 +16,8 @@ var options = {
 
 //静态资源
 app.use(express.static('public'));
+app.set('views','html');
+app.set('view engine','pug');
 
 //cookies and session
 var cookieParser = require('cookie-parser');
@@ -47,18 +49,31 @@ app.get('/', function (req, res) {
    res.send('Hello World!!!'+req.session.user);
 })
 
+//loign page
 app.get('/index', function (req, res) {
-    console.log(__dirname);
-   res.sendFile(__dirname+"/html/index.html" );
+    //console.log(__dirname);
+    res.sendFile(__dirname+"/html/index.html" );
 })
 
+//login action
 app.post('/login',function(req,res){
-  req.session.user = req.body.name;
-  res.send();
+  if(req.body.name == undefined){
+    res.redirect('/index');
+  }
+  else{
+    req.session.user = req.body.name;
+    res.redirect('/chat');
+  }    
 })
 
-app.get('/audio', function (req, res) {
-   res.sendFile(__dirname+"/html/audio.html" );
+app.get('/chat', function (req, res) {
+  if(req.session.user == undefined){
+    res.redirect('/index');
+  }
+  else{
+    //res.sendFile(__dirname+"/html/chatroom.html" );
+    res.render("chatroom",{name:req.session.user});
+  }  
 })
 
 app.get('/ajax', function (req, res) {
@@ -90,7 +105,7 @@ var userMap = Object.create(null);
 var WebSocketServer = require('ws').Server;
 var wss = new WebSocketServer({server: server});
 wss.on('connection', function(ws) {
-   // console.log(ws.upgradeReq.headers.cookie);
+    console.log("connection");
     var cookies = cookie.parse(ws.upgradeReq.headers.cookie);
     
     //get session by session id , get user info
@@ -100,11 +115,33 @@ wss.on('connection', function(ws) {
       var user = s.user;
       userMap[user] = ws;
       ws.on('message', function(message) {
-          wss.broadcast(message);
+          //console.log(message instanceof Buffer);
+          if(typeof message === "string"){
+            var data = {
+              user:user,
+              type:"text",
+              msg:message
+            };
+            wss.broadcast(JSON.stringify(data));
+          }
+          else{
+            var len = user.length;
+            var array = new Uint16Array(len+1);
+            array[0] = len;
+            for(var i=0;i<len;i++){
+              array[i+1] = user.charCodeAt(i);
+            }
+            //console.log(Buffer.from(array.buffer));
+            wss.broadcast(Buffer.concat([Buffer.from(array.buffer),message]));
+          }
+          
       });
-
       //建立连接，广播
-      wss.broadcast(user+" join the chatroom");
+      var data = {
+        user:user,
+        type:"init"
+      };
+      wss.broadcast(JSON.stringify(data));
     });
     
 });

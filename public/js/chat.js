@@ -1,44 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-<style type="text/css">
-.audio-div{
-    height: 20px;
-    width: 40px;
-    margin-left: 20px;
-    margin-top: 10px;
-    border: 1px solid #ccc;
-    padding-left: 5px;
-    line-height: 20px;
-}
-</style>
-</head>
-<body>
-<h1>Audio</h1>
-<div>
-<p>1.点击按钮 建立连接 , 选择允许使用麦克风,建立socket连接</p>
-<p>2.按下键盘 a 键，开始录音，松开a键，发送</p>
-</div>
-<input type='text' value='a' id='a'>
-<input type='button' value='建立连接' id='b'>
-<input type='button' value='关闭连接' id='c'>
-<br><br>
-<div>
-<textarea id="msg-area" rows=2 cols=80></textarea>
-<br><br>
-<input id="send-btn" type="button" value="发送">
-</div>
-<br><br>
-<div id='audio-container' style='width:500px;height:500px;border:1px solid #ccc'>
-</div>
-<!-- <audio id='audio' src="" controls="controls">
-您的浏览器不支持 audio 标签。
-</audio> -->
-<script type="text/javascript">
 
-var a = document.getElementById('a');
-var b = document.getElementById('b');
-var c = document.getElementById('c');
+var b = document.getElementById('join-room');
+var c = document.getElementById('exit-room');
 
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
 
@@ -58,10 +20,6 @@ sendbtn.onclick = function(){
 }
 
 b.onclick = function() {
-    if(a.value === '') {
-        alert('请输入用户名');
-        return false;
-    }
     if(!navigator.getUserMedia) {
         alert('抱歉您的设备无法语音聊天');
         return false;
@@ -71,15 +29,7 @@ b.onclick = function() {
         gRecorder = rec;
     });
 
-    var xhr = new XMLHttpRequest();
-    xhr.onload = function(){
-        ws = new WebSocket("wss://10.104.6.128:8888");
-    };
-    xhr.open("POST","login",false);
-    xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded")
-    xhr.send("name="+a.value);
-
-    //ws = new WebSocket("wss://10.104.6.128:8888");
+    ws = new WebSocket("wss://10.104.6.128:8888");
     ws.binaryType = "arraybuffer";
 
     ws.onopen = function() {
@@ -107,13 +57,7 @@ b.onclick = function() {
     document.onkeyup = function(e) {
         if(e.keyCode === 65) {
             if(door) {
-                var data = {};
-                data.user = a.value;
-                data.type = "audio";
-                data.msg = gRecorder.getBlob();
-                console.log(data);
                 ws.send(gRecorder.getBlob());
-                //ws.send(JSON.stringify(data));
                 gRecorder.clear();
                 gRecorder.stop();
                 door = false;
@@ -178,16 +122,11 @@ var SRecorder = function(stream) {
             var sampleBits = Math.min(this.inputSampleBits, this.oututSampleBits);
             var bytes = this.compress();
             var dataLength = bytes.length * (sampleBits / 8);
-            var buffer = new ArrayBuffer(49 + dataLength);
+            var buffer = new ArrayBuffer(44 + dataLength);
             var data = new DataView(buffer);
 
-            var name = "zheng";
-            for(var i = 0;i<5;i++){
-                data.setUint8(i,name.charCodeAt(i));
-            }
-
             var channelCount = 1;//单声道
-            var offset = 5;
+            var offset = 0;
 
             var writeString = function (str) {
                 for (var i = 0; i < str.length; i++) {
@@ -273,7 +212,7 @@ SRecorder.get = function (callback) {
                     callback(rec);
                 },
                 function(err){
-                	console.log(err)
+                  console.log(err)
                 })
         }
     }
@@ -284,11 +223,20 @@ function receive(msg) {
     console.log(msg instanceof ArrayBuffer);
 
     if(typeof msg === "string"){
-        
-        text(msg);
+        var data = JSON.parse(msg);
+        if(data.type == "init"){
+          text(data.user+" join the chatroom");
+        }
+        else{
+          text(data.user+" : "+data.msg);
+        }
     }
     else{
-        audio(msg.slice(5));
+      var length = new Uint16Array(msg.slice(0,2))[0];
+      console.log(length);
+      var name = String.fromCharCode.apply(null,new Uint16Array(msg.slice(2,length*2+2)));
+      console.log(name);
+      audio(new Blob([msg.slice(length*2+2)], { type: 'audio/wav' }));
     }
 
     return ;
@@ -329,7 +277,3 @@ document.onclick = function(e){
         target.childNodes[0].play();
     };
 }
-
-</script>
-</body>
-</html>
