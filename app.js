@@ -136,6 +136,11 @@ wss.on('connection', function(ws) {
           }
           
       });
+
+      ws.on('close',function(){
+        delete userMap[user];
+      })
+
       //建立连接，广播
       var data = {
         user:user,

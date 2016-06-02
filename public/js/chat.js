@@ -236,13 +236,15 @@ function receive(msg) {
       console.log(length);
       var name = String.fromCharCode.apply(null,new Uint16Array(msg.slice(2,length*2+2)));
       console.log(name);
-      audio(new Blob([msg.slice(length*2+2)], { type: 'audio/wav' }));
+      audio(new Blob([msg.slice(length*2+2)], { type: 'audio/wav' }),name);
     }
 
     return ;
     
 
-    function audio(audio_data){
+    function audio(audio_data,name){
+      var div = document.createElement("div");
+      div.appendChild(document.createTextNode(name+":"));
         var audio_div = document.createElement("div");
         audio_div.className = "audio-div";
         var audio_ele = document.createElement("audio");
@@ -256,8 +258,8 @@ function receive(msg) {
             audio_div.appendChild(time_ele);
         }
             
-
-        audio_container.appendChild(audio_div);
+        div.appendChild(audio_div);
+        audio_container.appendChild(div);
     }
     function text(text_data){
         var div = document.createElement("div");
