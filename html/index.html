@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Login</title>
+</head>
+<body>
+<div>
+	<form action="login" method="post" onsubmit="return check();">
+		<label>用户名</label><input id="username" type="text" name="username">
+		<input type='submit' value="登录">
+	</form>
+	<script type="text/javascript">
+		function check () {
+			var username = document.getElementById("username").value.trim();
+			if(username == ""){
+				alert("用户名不能为空");
+				return false;
+			}
+			return true;
+		}
+	</script>
+</div>
+</body>
+</html>

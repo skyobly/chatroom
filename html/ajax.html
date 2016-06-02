@@ -1,0 +1,71 @@
+<html>
+<head>
+	<meta charset="utf8">
+	<title>手写ajax</title>
+</head>
+<body>
+	<div>
+		<h1>手写ajax</h1>
+		<p>1.new XMLHttpRequest</p>
+		<p>2.onreadystatechange</p>
+		<p>3.open</p>
+		<p>4.send</p>
+	</div>
+	<div>
+		<form id="form">
+			<input type="file" id="uploadfile">
+		</form>
+	</div>
+<script type="text/javascript">
+	var xhr = new XMLHttpRequest();
+	xhr.responseType = "json";
+	// xhr.onreadystatechange = function(){
+	// 	console.log("xhr.readyState is "+this.readyState);
+	// 	if(xhr.readyState == 4){
+	// 		console.log("xhr.status is "+this.status);
+	// 		if((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304 ){
+	// 			console.log(xhr.response);
+	// 			console.log(xhr.response.msg);
+				
+	// 		}
+	// 		else{
+	// 			console.log("Request was unsuccessful: "+xhr.statusText);
+	// 		}
+	// 	}
+	// }
+	xhr.onloadstart = function(){
+		console.log("loadstart");
+	}
+	xhr.onprogress = function(event){
+		console.log("progress");
+		console.log(event);
+	}
+	xhr.onload = function(event){
+		if((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304 ){
+			console.log(xhr.response);
+			console.log(xhr.response.msg);
+			
+		}
+		else{
+			console.log("Request was unsuccessful: "+xhr.statusText);
+		}
+	}
+	xhr.onloadend = function(){
+		console.log("loadend");
+	}
+	xhr.onerror = function(){
+		console.log("error");
+		
+	}
+	xhr.onabort = function(){
+		console.log("abort");
+	}
+	xhr.upload.progress = function(){
+		console.log("upload progress");
+	}
+	xhr.open("GET","ajaxtest",true);
+	xhr.send();
+	//xhr.abort();
+</script>
+</body>
+</html>

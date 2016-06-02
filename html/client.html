@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h1>WebSocket</h1>
+<input id="input" type="text">
+<input id="btn" type="button" value="send">
+<div id="msg-container">
+
+</div>
+<script type="text/javascript">
+var ws = new WebSocket("wss://localhost:8888");  
+var btn = document.getElementById("btn");
+var input = document.getElementById("input");
+var msg_container = document.getElementById("msg-container");
+btn.onclick = function(){
+	ws.send(input.value);
+}   
+     
+ws.onopen = function() {    
+   console.log("Opened");    
+   ws.send("I'm client");    
+};    
+     
+ws.onmessage = function (evt) {     
+    console.log(evt.data); 
+    msg_container.innerHTML += "<br>"+evt.data;
+};    
+     
+ws.onclose = function() {    
+   console.log("Closed");    
+};    
+     
+ws.onerror = function(err) {    
+   console.log("Error: " + err);    
+};
+</script>
+</body>
+</html>
