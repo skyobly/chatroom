@@ -1,4 +1,4 @@
-
+(function(){
 var b = document.getElementById('join-room');
 var c = document.getElementById('exit-room');
 
@@ -34,16 +34,15 @@ b.onclick = function() {
 
     ws.onopen = function() {
         console.log('握手成功');
-        // var data = {};
-        // data.user = a.value;
-        // data.type = "init";
-        // data.msg = "";
-        // ws.send(JSON.stringify(data),"zheng");
     };
 
     ws.onmessage = function(e) {
         receive(e.data);
     };
+
+    ws.onclose = function(code,msg){
+        //console.log(code,msg);
+    }
 
     document.onkeydown = function(e) {
         if(e.keyCode === 65) {
@@ -68,7 +67,9 @@ b.onclick = function() {
 
 c.onclick = function() {
     if(ws) {
+        //console.log(123);
         ws.close();
+        //console.log(789);
     }
 }
 
@@ -219,13 +220,15 @@ SRecorder.get = function (callback) {
 }
 
 function receive(msg) {
-    console.log(msg);
-    console.log(msg instanceof ArrayBuffer);
+    //console.log(msg);
+    //console.log(msg instanceof ArrayBuffer);
 
     if(typeof msg === "string"){
         var data = JSON.parse(msg);
         if(data.type == "init"){
           text(data.user+" join the chatroom");
+        }else if(data.type == "exit"){
+          text(data.user+" exit the chatroom");
         }
         else{
           text(data.user+" : "+data.msg);
@@ -279,3 +282,4 @@ document.onclick = function(e){
         target.childNodes[0].play();
     };
 }
+})();

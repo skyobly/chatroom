@@ -42,6 +42,9 @@ app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 //app.use(multer()); // for parsing multipart/form-data
 
+//users , ws , userMap[user] = ws
+var userMap = Object.create(null);
+
 /**
  * routes
  */
@@ -51,8 +54,12 @@ app.get('/', function (req, res) {
 
 //loign page
 app.get('/index', function (req, res) {
-    //console.log(__dirname);
+  if(req.session.user == undefined){
     res.sendFile(__dirname+"/html/index.html" );
+  }
+  else{
+    res.redirect('/chat');
+  }     
 })
 
 //login action
@@ -98,8 +105,7 @@ var serverhttp = app.listen(8081, function () {
 //parse cookie
 var cookie = require('cookie');
 
-//users , ws , userMap[user] = ws
-var userMap = Object.create(null);
+
 
 //websocket server
 var WebSocketServer = require('ws').Server;
@@ -113,7 +119,22 @@ wss.on('connection', function(ws) {
       //console.log(e);
       //console.log(s);
       var user = s.user;
-      userMap[user] = ws;
+      
+      if(userMap[user] === undefined){
+        
+        userMap[user] = ws;
+        //建立连接，广播
+        var data = {
+          user:user,
+          type:"init"
+        };
+        wss.broadcast(JSON.stringify(data));
+      }
+      else{
+        userMap[user].close(1000,'da');
+        userMap[user] = ws;
+      }      
+
       ws.on('message', function(message) {
           //console.log(message instanceof Buffer);
           if(typeof message === "string"){
@@ -137,16 +158,25 @@ wss.on('connection', function(ws) {
           
       });
 
-      ws.on('close',function(){
-        delete userMap[user];
+      ws.on('close',function(code,msg){
+        //console.log("code : "+code,"msg : "+msg);
+        //console.log(userMap[user] === ws);
+        if(userMap[user] === ws){
+          delete userMap[user];
+          //关闭连接，广播
+          var data = {
+            user:user,
+            type:"exit"
+          };
+          wss.broadcast(JSON.stringify(data));
+        }
+        else{
+
+        }
+          
       })
 
-      //建立连接，广播
-      var data = {
-        user:user,
-        type:"init"
-      };
-      wss.broadcast(JSON.stringify(data));
+      
     });
     
 });
