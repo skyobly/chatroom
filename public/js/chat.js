@@ -2,6 +2,9 @@
 var b = document.getElementById('join-room');
 var c = document.getElementById('exit-room');
 
+//websocket url
+var ws_url = "wss://10.104.6.128:8888";
+
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
 
 var gRecorder = null;
@@ -29,7 +32,7 @@ b.onclick = function() {
         gRecorder = rec;
     });
 
-    ws = new WebSocket("wss://10.104.6.128:8888");
+    ws = new WebSocket(ws_url);
     ws.binaryType = "arraybuffer";
 
     ws.onopen = function() {
